@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  CASH
+  BOLETO
+}
+
+
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  description   String
+  amount        Float
+  type          TransactionType
+  category      String
+
+  status        TransactionStatus
+  isRecurring   Boolean   @default(false)
+
+  transactionDate DateTime
+  createdAt     DateTime @default(now())
+
+  paymentMethod PaymentMethod?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  installments Installment[]
+}
+
+model Installment {
+  id               String   @id @default(uuid())
+  amount           Float
+  installmentNumber Int
+  totalInstallments Int
+
+  dueDate          DateTime
+  isPaid           Boolean @default(false)
+
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+}
